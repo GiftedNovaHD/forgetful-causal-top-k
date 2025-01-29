@@ -20,3 +20,14 @@
 - [ ] Implement expert selection using router networks and multiple KV projections
 - [ ] Add support for multiple attention layers and model parallelism
 - [ ] Implement DiffQKV Attention with setting to (more) aggressively compress $K$ compared to $V$ components, whilst also increasing the head-dimension of $Q$. 
+
+## To-Check 
+- Combining top-$k$ makes batching hard
+- LoRANN operates on latent $K$ and $V$ vectors, but training uses full-dimensional keys for exact top-$k$, which creates a projection mismatch
+  - Might need to jointly train the latent projection layer with forgetful masking to align the latent and full space similarity
+- Latent projections of MLA need to preserve rank order of attention scores as a poorly trained projection layer would degrade ANN recall
+  - Consider contrastive loss
+- Dynamic $k$ selection to adjust $k$ to bound to an approximation error is kind of hard for long sequences because $\lvert A_\text{full} - A_\text{top-k} \rvert$ is intractable for larger sequences so something like entropy or gradient variance is needed? 
+- MoE routing for KVs makes ANN operations complicated. Note further that ANN must index expert-specific latent vectors so this adds memory and compute cost. 
+  - Also indexing expert-specific keys in ANNs may require $O(E \times N)$ memory for $E$ experts and $N$ tokens which makes it kind of prohibitive imo
+- Might need separate attention head for persistent tokens (global top-$k$) and regular tokens (sliding window) to efficiently mix them into one layer. 
