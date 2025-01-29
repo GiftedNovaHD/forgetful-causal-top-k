@@ -3,6 +3,8 @@ import lorann
 import lorann_gpu
 import torch
 import torch.nn.functional as F
+from torch.nn.attention.flex_attention import _score_mod_signature
+
     
 class ForgetfulCausalTopKAttention(nn.Module): 
   def __init__(self, 
