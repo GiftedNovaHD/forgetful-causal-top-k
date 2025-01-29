@@ -13,3 +13,10 @@
 - Increase dimension of $Q$ vectors as done in Sigma
 - Select which Key-Value expert pairs to use (maybe also have query experts)
 - Integrate persistent tokens as learnable attention sinks and sliding window attention (with special kernels)
+
+## To-Do 
+- [ ] Replace the exact top-$k$ attention with an ANN approximation like LoRANN during inference
+- [ ] Add dynamic $k$-selection logic based on approximation error bounds
+- [ ] Implement expert selection using router networks and multiple KV projections
+- [ ] Add support for multiple attention layers and model parallelism
+- [ ] Implement DiffQKV Attention with setting to (more) aggressively compress $K$ compared to $V$ components, whilst also increasing the head-dimension of $Q$. 
