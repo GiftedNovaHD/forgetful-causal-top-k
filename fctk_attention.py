@@ -3,6 +3,7 @@ import lorann
 import lorann_gpu
 import torch
 import torch.nn.functional as F
+from torch import Tensor
 from torch.nn.attention.flex_attention import _score_mod_signature
 
     
@@ -39,3 +40,23 @@ class ForgetfulCausalTopKAttention(nn.Module):
 
     self.head_dim = hidden_dim//num_heads
     
+    self.scale = self.head_dim**-0.5
+
+    self.query_proj = nn.Linear(hidden_dim, hidden_dim, bias=False)
+
+    self.kv_latent_proj = nn.Linear(hidden_dim, kv_latent_dim, bias=False)
+    self.k_proj = nn.Linear(kv_latent_dim, hidden_dim, bias=False)
+    self.v_proj = nn.Linear(kv_latent_dim, hidden_dim, bias=False)
+
+    self.out_proj = nn.Linear(hidden_dim, hidden_dim, bias=False)
+
+  def forward(self, x, kv_cache: Tensor = None):
+    """
+    Usage notes:
+      - If kv_cache is None, we assume that x is of shape (batch_size, seq_len, hidden_dim)
+      - If kv_cache is not None, we assume that x is of shape (batch_size, 1, hidden_dim)
+
+    Args:
+      x: Tensor, the input tensor of shape (batch_size, seq_len/1, hidden_dim)
+      kv_cache: Tensor, the key-value cache of shape (batch_size, seq_len, hidden_dim)
+    """
