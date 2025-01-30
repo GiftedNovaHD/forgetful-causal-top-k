@@ -1,12 +1,12 @@
 import torch
-from torch.nn.attention.flex_attention import _score_mod_signature, or_masks, and_masks
 
 from mask import (sliding_window_mask_constructor,
                   persistent_mask_constructor,
                   swa_persistent_mask_constructor,
                   top_k_mask_constructor,
                   inverse_persistent_mask_constructor,
-                  inverse_sliding_window_mask_constructor
+                  inverse_sliding_window_mask_constructor,
+                  inverse_mask
                  )
 
 from score_mod import (tanh_softcap_constructor)
@@ -37,13 +37,15 @@ def main(device: str = "cpu"):
     top_k_mask = top_k_mask_constructor(window_size, num_persistent_tokens)
     score_mod =  tanh_softcap_constructor(tanh_softcap)
 
+    inverse_p_proto_mask = inverse_mask(swa_p_mask)
+
     visualize_attention_scores(
         query,
         key,
         score_mod=None,
-        mask_mod=top_k_mask,
+        mask_mod=inverse_p_proto_mask,
         device=device,
-        name=f"topk_swa_{window_size}_persistent_{num_persistent_tokens}_mask"
+        name=f"proto_mask"
     )
 
 
