@@ -75,15 +75,3 @@ def tanh_softcap_constructor(soft_cap: int, approx: bool = False) -> _score_mod_
     tanh_softcap.__name__ = f"{prefix}_{soft_cap}"
 
     return tanh_softcap
-
-def dynamic_topk_softmax_constructor(threshold: float):
-  """
-    Returns a softmax approximation generated through dynamic top-k such that
-    when the score of the lowest token is below the threshold, no additional tokens are looked at
-
-    Args:
-      threshold: The threshold value to use for the dynamic top-k softmax
-  """
-
-  def dynamic_topk_softmax(score, b, h, q_idx, kv_idx):
-      raise NotImplementedError

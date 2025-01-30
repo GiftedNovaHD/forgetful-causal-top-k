@@ -9,7 +9,7 @@ from mask import (sliding_window_mask_constructor,
                   inverse_mask
                  )
 
-from score_mod import (tanh_softcap_constructor)
+from score_mod.tanh_softcap_score_mod import (tanh_softcap_constructor)
 
 def main(device: str = "cpu"):
     """Visualize the attention scores of sliding window mask mod.

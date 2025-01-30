@@ -3,6 +3,7 @@ from torch.nn.attention.flex_attention import or_masks, and_masks, _mask_mod_sig
 """
   Notes for coding masks with flex attention:
     - The 2 tokens will be allowed to attention to eachother if the mask returns True
+    - Logical operations need to use bitwise operators
 """
 
 def inverse_mask(mask: _mask_mod_signature) -> _mask_mod_signature:
