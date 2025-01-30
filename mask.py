@@ -1,4 +1,3 @@
-import torch
 from torch.nn.attention.flex_attention import or_masks, and_masks, _mask_mod_signature
 
 """
@@ -19,8 +18,6 @@ def inverse_mask(mask: _mask_mod_signature) -> _mask_mod_signature:
     return result
   
   return inverse_mask
-
-
 
 def causal_mask(b, h, q_idx, kv_idx):
   return q_idx >= kv_idx
