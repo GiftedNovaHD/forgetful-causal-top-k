@@ -6,7 +6,7 @@ from torch.nn.attention.flex_attention import _score_mod_signature, or_masks, an
     - The 2 tokens will be allowed to attention to eachother if the mask returns True
 """
 
-def sliding_window_mask(window_size):
+def sliding_window_mask_constructor(window_size):
   """
     Generate a mask for sliding window attention given a window size.
 
@@ -15,15 +15,17 @@ def sliding_window_mask(window_size):
   """
 
   def sliding_window(b, h, q_idx, kv_idx):
-    return q_idx - kv_idx <= window_size
+    return q_idx - kv_idx < window_size
   
-  return sliding_window
+  sliding_window_mask = and_masks(sliding_window,causal_mask)
+  
+  return sliding_window_mask
   
 
 def causal_mask(b, h, q_idx, kv_idx):
   return q_idx >= kv_idx
 
-def persistent_mask(num_persistent_tokens):
+def persistent_mask_constructor(num_persistent_tokens):
   """
     Generate a mask for persistent tokens.
   
@@ -31,19 +33,19 @@ def persistent_mask(num_persistent_tokens):
       num_persistent_tokens: int, the number of persistent tokens
   """
   def persistent(b, h, q_idx, kv_idx):
-    return kv_idx <= num_persistent_tokens
+    return kv_idx < num_persistent_tokens
   
   return persistent
 
-def swa_persistent_mask(window_size, num_persistent_tokens):
+def swa_persistent_mask_constructor(window_size, num_persistent_tokens):
   """
     Generate a mask for sliding window attention with persistent tokens.
   Args:
       window_size: int, the size of the sliding window
       num_persistent_tokens: int, the number of persistent tokens
   """
-  swa_mask = sliding_window_mask(window_size)
-  persistent_mask = persistent_mask(num_persistent_tokens)
+  swa_mask = sliding_window_mask_constructor(window_size)
+  persistent_mask = persistent_mask_constructor(num_persistent_tokens)
 
   swa_persistent = or_masks(swa_mask, persistent_mask)
 
