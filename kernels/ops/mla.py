@@ -66,3 +66,71 @@ def mla_kernel(
   # Perform a two pass SoftMax for numerical stability 
   # First pass: compute the max value for each query row
   # Second pass: compute exponentials and weighted sums 
+
+  max_logits = tl.full((BLOCK_M,), -1e9, dtype=tl.float32)
+
+  # Pass 1
+  for n in range(0, L, BLOCK_N):
+    # For each block of keys, load K into SMEM (size: BLOCK_N x Dk) 
+    for j in range(BLOCK_N): 
+      key_index = n + j 
+      for i in range(BLOCK_M): 
+        if key_index < L: 
+          # Compute dot product between q_proj[i, :] and K[b, key_index, :] 
+          dot = 0.0 
+          for d in range(Dk): 
+            q_val = q_proj[i, d]
+            k_val = tl.load(K_ptr + b * L * Dk + key_index * Dk + d)
+            dot += q_val * k
+          # Update max logits per query for stability
+          max_logits[i] = tl.maximum(max_logits[i], dot)
+        else: 
+          # Skip out-of-bound keys 
+          pass 
+  
+  # Pass 2
+  sum_exp = tl.zeros((BLOCK_M,), dtype=tl.float32)
+  # Temporarily store the softmax weights for the BLOCK_N keys  
+  softmax_block = tl.zeros((BLOCK_M, BLOCK_N), dtype=tl.float32)
+
+  # Loop again over key blocks 
+  for n in range(0, L, BLOCK_N): 
+    for j in range(BLOCK_N): 
+      key_index = n + j 
+      for i in range(BLOCK_M): 
+        if key_index < L: 
+          # Compute dot product between q_proj[i, :] and K[b, key_index, :] 
+          # Need to cache this later 
+          dot = 0.0 
+          for d in range(Dk):
+            q_val = q_proj[i, d]
+            k_val = tl.load(K_ptr + b * L * Dk + key_index * Dk + d)
+            dot += q_val * k_val
+          # Subtract max logit for numerical stability. Then exponentiate and accumulate
+          exp_val = tl.exp(dot - max_logits[i])
+          softmax_block[i, j] = exp_val
+          sum_exp[i] += exp_val
+        else: 
+          softmax_block[i, j] = 0.0 
+
+  # Use softmax weights to update the output
+  for j in range(BLOCK_N): # Loop over BLOCK_N keys to perform weighted sum over V
+    key_index = n + j
+    for i in range(BLOCK_M): 
+      if key_index < L: 
+        # Normalize softmax weights for this key 
+        weight = softmax_block[i, j] / (sum_exp[i] + 1e-6)
+        # Load the compressed V vector 
+        for d in range(Dv): 
+          v_val = tl.load(V_ptr + (b * L * Dv + key_index * Dv + d))
+          out[i, d] += weight * v_val 
+      else: 
+        # Skip out-of-bound keys
+        pass 
+  
+  # Write computed output for each query in this block 
+  for i in range(BLOCK_M): 
+    m = m_start + i 
+    if m < L:
+      for d in range(Dv):
+        tl.store(Output_ptr + (b * L * Dv + m * Dv + d), out[i, d])
