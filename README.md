@@ -15,11 +15,20 @@
 - Integrate persistent tokens as learnable attention sinks and sliding window attention (with special kernels)
 
 ## To-Do 
+- [ ] Forgetful Top-$k$ Attention Mechanism 
+  - [ ] Static top-$k$ Selection  
+       *(Not yet fully implemented)*
+  - [ ] Dynamic top-$k$ Selection for training 
+  - [x] MLA Forward Pass 
+  - [x] MLA Backward Pass
+- [ ] Sliding Window Attention 
+- [ ] Persistent Tokens
 - [ ] Replace the exact top-$k$ attention with an ANN approximation like LoRANN during inference
 - [ ] Add dynamic $k$-selection logic based on approximation error bounds
 - [ ] Implement expert selection using router networks and multiple KV projections
 - [ ] Add support for multiple attention layers and model parallelism
-- [ ] Implement DiffQKV Attention with setting to (more) aggressively compress $K$ compared to $V$ components, whilst also increasing the head-dimension of $Q$. 
+- [ ] Implement DiffQKV Attention with setting to (more) aggressively compress $K$ compared to $V$ components, whilst also increasing the head-dimension of $Q$.
+
 
 ## To-Check 
 - Combining top-$k$ makes batching hard
